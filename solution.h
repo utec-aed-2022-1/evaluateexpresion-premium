@@ -1,6 +1,9 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include <map>
+#include <stack>
+#include <list>
 
 using namespace std;
 
@@ -90,23 +93,72 @@ struct Result
     bool error;
 };
 
+void removeSpaces(char *s)
+{
+    *std::remove(s, s + strlen(s), ' ') = 0;
+}
+
 Result evaluate(string input)
 {
+    std::map<char, int> prec = {
+            { '*', 3 },
+            { '/', 3 },
+            { '+', 2 },
+            { '-', 2 },
+            { '(', 1 }
+    };
+
     Result resultado;
-    List<char> *char_list = new List<char>; // Creamos una lista para los caracteres
-    int *array = new int;
-    int c = 0;
+    // 1
+    stack<char> *opstack; // Lista para operadores
+    list<char> postfixList;
+    // 2
 
-    char *ptr;
-    ptr = strtok(, ' ');
+    // Creamos una lista para los caracteres
+    list<char> tokenList = new list<char>;
+    remove(input.begin(), input.end(), ' ');
+    for (int i = 0; i < input.size(); i++)
+        tokenList.push_front(input[i]);
 
-    for (int i = 0; i < input.size(); i++) // Mapeamos todo el string
-    {
-        if (input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/') // Guardamos operadores en la lista
-            char_list->push_front(input[i]);
-        else if ((int)input[i] > 0) // Guardamos los números en un array
-            array[c++] = input[i];
+    // 3
+    list<char> tokenList;
+    // crear lista de números (operandos)
+    list<char> numlist = ['1','2','3','4','5','6','7','8','9','0'];
+
+
+    for(auto token = tokenList.begin(); token!= tokenList.end(); ++token) {
+        // Caso token es operando
+        for (auto num = numlist.begin(); num != numlist.end(); ++num)
+            if (*num == *token)
+                postfixList.pushback(*token);
+        // Caso token es (
+        if (token == "(")
+            opstack.push(*token);
+        // Caso token es )
+        if (token == ")")
+            // Obtener último elemento agregado al stack
+            char topToken = opstack.top();
+        opstack.pop(); // Elimina el último elemento del stack
+        // Mientras el siguiente elemento no sea apertura '(',
+        //              Agrega todos los operadores a la lista de salida postfixList
+        while (topToken != '(') {
+            postfixList.push(topToken);
+            topToken = opstack.top;
+            opstack.pop();
+        }
+        else
+        while (!opstack.empty() && (prec[opstack.top()] >= prec[token])) {
+            postfixList.pushback(opstack.top());
+            opstack.pop();
+            opstack.push(token);
+        }
     }
+
+    while (!opstack.empty()){
+        postfixList.pushback(opstack.pop())
+    }
+
+
 
     // +
     // 5 8
